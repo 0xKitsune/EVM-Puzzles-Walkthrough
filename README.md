@@ -458,3 +458,50 @@ Then we execute the `CALL` instruction, which returns `0` if the sub context rev
 
 Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. This one is a little bit tricky, to get `CALL` to fail, there are a few ways. Some ways that it can fail are: there is not enough gas, there are not enough values on the stack or if the `CALL` expects a specific return size and gets a different one. In our case, we can't change the values on the stack or the gas, so we will manipulate the third case. Since `CALL` expects a return size of `0` for this puzzle, we need to enter calldata that when executed via `CALL`, the return size is > `0`. While you can enter any bytecode that returns a value when executed, we will use a simple byte code sequence that returns `01`. Here is what that looks like in opcodes: `PUSH1 01 PUSH1 00 MSTORE PUSH1 01 PUSH1 1F RETURN`, and encoded to hexadecimal, `0x60016000526001601ff3`. There you go, `0x60016000526001601ff3` is our answer!
 
+
+
+# Puzzle #9
+We are in the home stretch, let's take a look at puzzle #9. This puzzle adds one more layer of complexity, requiring you to enter both a callvalue and calldata to solve the puzzle.
+
+```js
+############
+# Puzzle 9 #
+############
+
+00      36        CALLDATASIZE
+01      6003      PUSH1 03
+03      10        LT
+04      6009      PUSH1 09
+06      57        JUMPI
+07      FD        REVERT
+08      FD        REVERT
+09      5B        JUMPDEST
+0A      34        CALLVALUE
+0B      36        CALLDATASIZE
+0C      02        MUL
+0D      6008      PUSH1 08
+0F      14        EQ
+10      6014      PUSH1 14
+12      57        JUMPI
+13      FD        REVERT
+14      5B        JUMPDEST
+15      00        STOP
+
+? Enter the value to send: (0)
+
+```
+
+We are already familiar with the first two opcodes so we can know that after the `PUSH1 03` instruction, our stack looks like this.
+
+```js
+[03 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+```
+
+The [LT instruction](https://www.evm.codes/#10) runs a comparison on the first two stack values to see if the first stack element is less than the second stack element. If `LT` evaluates to true, `1` is pushed on the stack, otherwise `0` is pushed onto the stack. The two values used in the comparison are consumed in this process. For the sake of the example, let's say that the `CALLDATASIZE` is 4 bytes, so `LT` will push `1` as a result. 
+
+Since the `LT` instruction evaluated to true, the code then jumps to the `JUMPDEST` at instruction `09`. Following the jump, `CALLVALUE` and `CALLDATASIZE` are pushed onto the stack and `MUL` multiplies them together, consuming the values in the process. `PUSH1 08` pushes `08` to the stack and then `EQ` checks if the result of `MUL` equals `08`, consuming the values in the process. `EQ` needs to push a `1` to the stack to enable `JUMPI` to get us to the end of the puzzle.
+
+With all this information, we now know that we need to pass in calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE` and `CALLVALUE` is `08`. 
+
+With some quick math, we can use any combination of integers that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
+
