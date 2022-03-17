@@ -391,3 +391,70 @@ Directly after, the `EQ` instruction is executed, checking if the top two values
 
 So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! 
 
+
+# Puzzle #8
+
+Welcome to the eigth puzzle. Lets take a look at what is in store.
+
+```js
+############
+# Puzzle 8 #
+############
+
+00      36        CALLDATASIZE
+01      6000      PUSH1 00
+03      80        DUP1
+04      37        CALLDATACOPY
+05      36        CALLDATASIZE
+06      6000      PUSH1 00
+08      6000      PUSH1 00
+0A      F0        CREATE
+0B      6000      PUSH1 00
+0D      80        DUP1
+0E      80        DUP1
+0F      80        DUP1
+10      80        DUP1
+11      94        SWAP5
+12      5A        GAS
+13      F1        CALL
+14      6000      PUSH1 00
+16      14        EQ
+17      601B      PUSH1 1B
+19      57        JUMPI
+1A      FD        REVERT
+1B      5B        JUMPDEST
+1C      00        STOP
+
+? Enter the calldata:
+```
+
+This one might look more daunting but it is actually pretty simple. First we see a very similar `CALLDATASIZE PUSH1 00 DUP1 CALLDATACOPY CALLDATASIZE PUSH1 00 PUSH1 00 CREATE` which, just like the previous puzzle, creates a new contract from the calldata that you pass in. So right from the start, we know that we will have to enter bytecode for a contract to solve the puzzle. Lets take a quick mental note of what the stack looks like at this point. Since the `CREATE` instruction consumes the top three stack values and pushes the address that the new account was deployed to, our stack now looks like this.
+
+
+```js
+[address_deployed 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+```
+
+
+The next 5 instructions all relate to the [CALL instruction](https://www.evm.codes/#f1). This instruction creates a new sub context and execute the code of the given account, then resumes the current one. Note that an account with no code will return success as true. In plain english, the `CALL` instruction is used to interact with another contract. This opcode expects the stack to have a few values a the top of the stack
+`[gas address value argsOffset argsSize retOffset retSize]`, in this order. Lets walk through each of the arguments one by one. `gas` is the amount of gas that will be sent with the message call. `address` is the address that the message will be sent to. `value` is the amount of wei that will be sent with the message. `argsOffset` is the location in memory within the current context (ie. the msg.sender) that will be used as calldata for the message call. `argsSize` is the size of the calldata to send with the message call. `retOffset` is the location in memory within the current context where the return value from the call will be stored. Finally, `retSize` is the size of the return value that will be stored in memory.
+
+Now let's take a look at the puzzle again. The next four opcodes are `PUSH1 00 DUP1 DUP1 DUP1 DUP1`, which makes the stack look like this.
+
+
+```js
+[0 0 0 0 0 address_deployed 0 0 0 0 0 0 0 0 0 0]
+```
+
+Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack items. There are SWAP instructions for all positions in the stack (`SWAP1`-`SWAP16`). In this case, we `SWAP5` exchanges `0` with `address_deployed` making our stack now in the correct order to match `[gas address value argsOffset argsSize retOffset retSize]`. Here is what our stack looks like now. 
+
+
+```js
+[address_deployed 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+```
+
+Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
+
+
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. This one is a little bit tricky, to get `CALL` to fail, there are a few ways. Some ways that it can fail are: there is not enough gas, there are not enough values on the stack or if the `CALL` expects a specific return size and gets a different one. In our case, we can't change the values on the stack or the gas, so we will manipulate the third case. Since `CALL` expects a return size of `0` for this puzzle, we need to enter calldata that when executed via `CALL`, the return size is > `0`. While you can enter any bytecode that returns a value when executed, we will use a simple byte code sequence that returns `01`. Here is what that looks like in opcodes: `PUSH1 01 PUSH1 00 MSTORE PUSH1 01 PUSH1 1F RETURN`, and encoded to hexadecimal, `0x60016000526001601ff3`. There you go, `0x60016000526001601ff3` is our answer!
+
