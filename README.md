@@ -3,19 +3,17 @@
 
 TODO: need to explain when values are consumed during operations, also need to explain that the value you enter for tx value is in decimal and it gets converted to hexadecimal.
 
-EVM-Puzzles is a fantastic Github repo featuring a collection of challenges involving EVM opcodes, calldata and ….  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value that will allow the sequence to run without reverting. This article aims to be a low impact walkthrough for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, first read take a look at [how stack machines work](). There are 10 puzzles, someone with no experience, this should take about 2 hours, someone with some experience this should take about 1 hour and someone with a lot of experience but still wanting to go through the walkthrough, this should take somewhere around 30-40 min. With that note, we are almost ready to get started!
+EVM-Puzzles is a collection of challenges involving that will help you to better understand the Ethereum Virtual Machine.  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value or calldata that will allow the sequence to run without reverting. This walkthrough aims to be a low impact guide for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, take a look at [how stack machines work]() before starting. There are 10 puzzles. For someone with no experience with the EVM, this should take about 1-2 hours. For someone with basic EVM experience, this should take about 1 hour. If you are very comfortable with the EVM but you still want to go through the walkthrough, this should take somewhere around 30 minutes. With that note, we are ready to get started!
 
-There are a few things you’ll need before getting started.
+First, head over to the [EVM-Puzzles repo](https://github.com/fvictorio/evm-puzzles), clone the project and set up your local environment. Make sure you have hardhat installed. If you don’t, you can simply enter `npm install --save-dev hardhat` when you are in the root project folder.
 
-First, head over to the [EVM-Puzzles repo](), clone the project and set up your local environment. Make sure you have hardhat installed. If you don’t, you can simply enter `npm install --save-dev hardhat` when you are in the root project folder.
+Next, if you are newer to the EVM, take a brief look at the [EVM opcodes](https://www.evm.codes/) (don’t feel the need to understand everything, just get the general idea).
 
-Next, if you are newer to the EVM, take a brief look at the [EVM opcodes]() (don’t feel the need to understand everything, just get the general idea).
-
-With all of that out of the way, let’s get started! To start the first puzzle, cd into the root directory of the project and enter npx hardhat play into the terminal.
+With all of that out of the way, let’s check out the first puzzle. To start the first puzzle, cd into the root directory of the project and enter `npx hardhat play` into the terminal.
 
 # Puzzle #1
 
-Let’s take a look at the first puzzle. You are given a series of opcodes that represent a contract. The puzzle prompts you to enter a value to send, or in other words if you sent a transaction to this contract what value would the transaction value need to be for this contract to run without reverting?  Go ahead and give it a shot and then feel free to come back here if you get stuck or want an in depth look at the solution after solving the puzzle.
+Let’s take a look at the first puzzle. You are given a series of opcodes that represent a contract. The puzzle prompts you to enter a value to send, or in other words if you sent a transaction to this contract, what would the transaction value need to be for this contract to run without hitting the [REVERT instruction](https://www.evm.codes/#fd)?  Go ahead and give it a shot and then feel free to come back here if you get stuck or want an in depth look at the solution after solving the puzzle.
 
 ```js
 
@@ -38,7 +36,7 @@ Let’s take a look at the first puzzle. You are given a series of opcodes that 
 
 ```
 
-Ok, now for the explainer. First, we need to know what the [CALLVALUE instruction]()  does. This opcode gets the value of the current call (ie. the transaction value) in wei and pushes that value to the top of the stack. So if we entered a value of 10, before the `CALLVALUE` instruction is evaluated, the stack would look like this.
+Ok, now for the explainer. First, we need to know what the [CALLVALUE instruction](https://www.evm.codes/#34) does. This opcode gets the value of the current call (ie. the transaction value) in wei and pushes that value to the top of the stack. So if we entered a value of 10, before the `CALLVALUE` instruction is evaluated, the stack would look like this.
 
 ```js
 
@@ -46,7 +44,7 @@ Ok, now for the explainer. First, we need to know what the [CALLVALUE instructio
 
 ```
 
-After the `CALLVALUE` opcode is evaluated and the value we entered is pushed onto the stack, the stack looks like this.
+After the `CALLVALUE` opcode is evaluated, the stack would look like this.
 
 ```js
 
@@ -54,22 +52,23 @@ After the `CALLVALUE` opcode is evaluated and the value we entered is pushed ont
 
 ```
 
-Next, we need to know what the [JUMP]() instruction does. This opcode consumes the top value on the stack and jumps to the `n`th instruction in the sequence where `n` is the value at the top of the stack. A quick example will make this more clear.  Lets say we have the following sequence.
+Next, we need to know what the [JUMP](https://www.evm.codes/#56) instruction does. This opcode consumes the top value on the stack and jumps to the `n`th instruction in the sequence where `n` is the value at the top of the stack. A quick example will make this more clear.  Lets say we have the following sequence.
 
 ```js
 
 00      34      CALLVALUE
 01      56      JUMP
-02      80      DUP1
-03      80      DUP1
-04      80      DUP1
-05      00      STOP
+02      FD      REVERT
+03      FD      REVERT
+04      80      JUMPDEST
+05      80      DUP1
+06      00      STOP
 
 ? Enter the value to send: (0)
 
 ```
 
-If we enter 4 in as the value to send, the `CALLVALUE` opcode will get the value of the transaction and push that value on the stack. so now our stack looks like this.
+If we enter 4 in as the value to send, the `CALLVALUE` opcode will push `4` onto the stack. After `CALLVALUE`, now our stack looks like this.
 
 ```js
 
@@ -77,16 +76,14 @@ If we enter 4 in as the value to send, the `CALLVALUE` opcode will get the value
 
 ```
 
-Then the `JUMP` opcode consumes the top value on the stack and jumps to the instruction at that number. Since the value on the top of the stack is `4`, the program counter jumps to the fourth instruction and continues.  A `JUMP` opcode must alter the program counter to end up at a `JUMPDEST` instruction. For the above example, we can think of the program looking like this after the `JUMP` instruction is evaluated.
+Then the `JUMP` opcode consumes the top value on the stack and jumps to the instruction at that position. Since the value on the top of the stack is `4`, the program counter jumps to the fourth instruction and continues. A `JUMP` opcode must alter the program counter to end up at a `JUMPDEST` instruction. For the above example, we can think of the program looking like this after the `JUMP` instruction is evaluated.
 
 ```js
-
-04      80      DUP1
-05      00      STOP
-
+05      80      DUP1
+06      00      STOP
 ```
 
-Now that all of that is clear, lets get back to the puzzle. We need to enter a value so that the program runs without hitting a REVERT instruction.
+Now that all of that is clear, lets get back to the puzzle. We need to enter a value so that the program runs without hitting a `REVERT` instruction.
 
 ```js
 
@@ -103,7 +100,7 @@ Now that all of that is clear, lets get back to the puzzle. We need to enter a v
 
 ```
 
-To do this, we can enter a call value of 8, which causes the `CALLVALUE` instruction to push `8` onto the stack where the `JUMP` instruction then consumes that value and jumps to the 8th instruction, skipping all of the REVERT instructions. Nice work, one puzzle down!
+To do this, we can enter a call value of 8, which causes the `CALLVALUE` instruction to push `8` onto the stack where the `JUMP` instruction then consumes that value and jumps to the 8th instruction, skipping all of the `REVERT` instructions. Nice work, one puzzle down!
 
 
 # Puzzle #2
