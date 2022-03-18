@@ -18,6 +18,7 @@ With all of that out of the way, let’s get started! To start the first puzzle,
 Let’s take a look at the first puzzle. You are given a series of opcodes that represent a contract. The puzzle prompts you to enter a value to send, or in other words if you sent a transaction to this contract what value would the transaction value need to be for this contract to run without reverting?  Go ahead and give it a shot and then feel free to come back here if you get stuck or want an in depth look at the solution after solving the puzzle.
 
 ```js
+
 ############
 # Puzzle 1 #
 ############
@@ -40,13 +41,17 @@ Let’s take a look at the first puzzle. You are given a series of opcodes that 
 Ok, now for the explainer. First, we need to know what the [CALLVALUE instruction]()  does. This opcode gets the value of the current call (ie. the transaction value) in wei and pushes that value to the top of the stack. So if we entered a value of 10, before the `CALLVALUE` instruction is evaluated, the stack would look like this.
 
 ```js
+
 [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 ```
 
 After the `CALLVALUE` opcode is evaluated and the value we entered is pushed onto the stack, the stack looks like this.
 
 ```js
+
 [10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 ```
 
 Next, we need to know what the [JUMP]() instruction does. This opcode consumes the top value on the stack and jumps to the `n`th instruction in the sequence where `n` is the value at the top of the stack. A quick example will make this more clear.  Lets say we have the following sequence.
@@ -61,22 +66,30 @@ Next, we need to know what the [JUMP]() instruction does. This opcode consumes t
 05      00      STOP
 
 ? Enter the value to send: (0)
+
 ```
 
 If we enter 4 in as the value to send, the `CALLVALUE` opcode will get the value of the transaction and push that value on the stack. so now our stack looks like this.
 
+```js
+
 [4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
+```
 
 Then the `JUMP` opcode consumes the top value on the stack and jumps to the instruction at that number. Since the value on the top of the stack is `4`, the program counter jumps to the fourth instruction and continues.  A `JUMP` opcode must alter the program counter to end up at a `JUMPDEST` instruction. For the above example, we can think of the program looking like this after the `JUMP` instruction is evaluated.
 
 ```js
+
 04      80      DUP1
 05      00      STOP
+
 ```
 
 Now that all of that is clear, lets get back to the puzzle. We need to enter a value so that the program runs without hitting a REVERT instruction.
 
 ```js
+
 00      34      CALLVALUE
 01      56      JUMP
 02      FD      REVERT
@@ -87,6 +100,7 @@ Now that all of that is clear, lets get back to the puzzle. We need to enter a v
 07      FD      REVERT
 08      5B      JUMPDEST
 09      00      STOP
+
 ```
 
 To do this, we can enter a call value of 8, which causes the `CALLVALUE` instruction to push `8` onto the stack where the `JUMP` instruction then consumes that value and jumps to the 8th instruction, skipping all of the REVERT instructions. Nice work, one puzzle down!
@@ -97,6 +111,7 @@ To do this, we can enter a call value of 8, which causes the `CALLVALUE` instruc
 Now that you have your feet wet, lets take a look at the second puzzle. Give it a shot on your own and just like before, feel free to come back to check out the solution as well as the explanation. Here is the puzzle.
 
 ```js
+
 ############
 # Puzzle 2 #
 ############
@@ -113,6 +128,7 @@ Now that you have your feet wet, lets take a look at the second puzzle. Give it 
 09      FD      REVERT
 
 ? Enter the value to send: (0) 
+
 ```
 
 Just like before, we need to enter a transaction value to send that will cause the program to run without reverting. If we take a look at the sequence of instructions, we can see that we need the `JUMP` opcode to alter the program counter to the 6th instruction. Just like before, the first instruction is call value, so we know that the value we enter will end up on the top of the stack after the first instruction.
@@ -122,19 +138,25 @@ Lets take a look at the [CODESIZE instruction](). This opcode gets the size of t
 The next opcode we come across is the [SUB instruction](), which takes the first stack element minus the second stack element, consumes both the first and second element and pushes the result to the top of the stack. For example if we had a stack that looked like this.
 
 ```js
+
 [3 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 ```
 
 Executing the `SUB` instruction would produce the following stack result.
 
 ```js
+
 [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 ```
 
 With this information let's get back to the puzzle. We now know that the program first evaluates the `CALLVALUE` instruction, pushing the value of the transaction on the stack. Then the program evaluates the `CODESIZE` instruction, which pushes `a` (representing 10 bytes) onto the stack. We also know that we need `JUMP` to alter the program counter to the 6th instruction. In essence, we have the following stack after the `CODESIZE` instruction.
 
 ```js
+
 [a your_input 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
 ```
 
 Go ahead and if you haven’t already finished this puzzle, try to use the above information to enter the correct value, or feel free to read on for the last step of the solution.
@@ -172,6 +194,7 @@ With that knowledge, this makes this puzzle pretty straightforward. We will need
 Enter bitwise. In this puzzle we see our first `XOR` instruction. As usual, feel free to give it a shot and figure it out on your own. When you’re ready, head back here for the solution and explanation.
 
 ```js
+
 ############
 # Puzzle 4 #
 ############
@@ -190,15 +213,25 @@ Enter bitwise. In this puzzle we see our first `XOR` instruction. As usual, feel
 0B      00      STOP
 
 ? Enter the value to send: (0) 
+
 ```
 
 We know that `CALLVALUE` will push the value we enter onto the top of the stack and we can take a look at how many instructions there are to know how big the `CODESIZE` is. In this program, we have 12 instructions, which makes 12 bytes or `c` in hexadecmial, which gets pushed to the stack.  So now our stack looks like this.
 
+
+```js
+
 [c your_input 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
+```
 
 Let’s take a look at the [XOR instruction](). This instruction evaluates two numbers in their binary representation and returns a `1` in each bit position where the bits of **either, but not both** operands are `1`s. Let’s take a look at quick example. Say that we have two numbers on the top of the stack.
 
+
+```js
 [5 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
+```
 
 When executing the `XOR` instruction, we can imagine the two numbers on top of each other in binary representation like this.
 
@@ -387,9 +420,7 @@ Now that we understand all of the previous information, we `PUSH1 01` making our
 [01 address_code_size 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Directly after, the `EQ` instruction is executed, checking if the top two values are equal and pushing the result on the stack. From there `PUSH1 13` and `JUMPI` are used to get us to the `JUMPDEST`!
-
-So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! To understand this, we can look at the playground example from the [EXTCODESIZE instruction](https://www.evm.codes/#3b). Here is what the example looks like.
+Directly after, the `EQ` instruction is executed, checking if the top two values are equal and pushing the result on the stack. From there `PUSH1 13` and `JUMPI` are used to get us to the `JUMPDEST`! So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! To understand this, we can look at the playground example from the [EXTCODESIZE instruction](https://www.evm.codes/#3b). Here is what the example looks like.
 
 ```js
 // Creates a constructor that creates a contract with 32 FF as code
@@ -412,6 +443,8 @@ EXTCODESIZE
 ```
 
 When this code is run, it returns a value of `ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` which is 32 bytes. If you want, you can check out the opcodes for the [deployed contract code here](https://www.evm.codes/playground?callValue=0&unit=Wei&callData=0x60016000526001601f&codeType=Bytecode&code=%2736600080373660006000F0600080808080945AF1600014601B57FD5B00%27_). If we change the return size to 16 bytes instead of 32 bytes, the `EXTCODESIZE` will be `10` which is 16 bytes in hexadecimal.
+
+Lets finish the puzzle. Now we know that the `EXTCODESIZE` relies on the size of the return value when the contract is called. With this information, we can pass in calldata such that when it is deployed, it returns a 1 byte value! You can use any sequence of opcodes that returns 1 byte, but for this walkthrough, we will use `0x60016000526001601ff3`. And with that, another puzzle solved!
 
 
 # Puzzle #8
@@ -478,8 +511,7 @@ Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack i
 Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
 
 
-Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. This one is a little bit tricky, to get `CALL` to fail, there are a few ways. Some ways that it can fail are: there is not enough gas, there are not enough values on the stack or if the `CALL` expects a specific return size and gets a different one. In our case, we can't change the values on the stack or the gas, so we will manipulate the third case. Since `CALL` expects a return size of `0` for this puzzle, we need to enter calldata that when executed via `CALL`, the return size is > `0`. While you can enter any bytecode that returns a value when executed, we will use a simple byte code sequence that returns `01`. Here is what that looks like in opcodes: `PUSH1 01 PUSH1 00 MSTORE PUSH1 01 PUSH1 1F RETURN`, and encoded to hexadecimal, `0x60016000526001601ff3`. There you go, `0x60016000526001601ff3` is our answer!
-
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it will fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a STATICCALL and the value in wei (stack index 2) is not 0 (since Byzantium fork). In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
 
 
 # Puzzle #9
@@ -525,7 +557,7 @@ Since the `LT` instruction evaluated to true, the code then jumps to the `JUMPDE
 
 With all this information, we now know that we need to pass in calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE` and `CALLVALUE` is `08`. 
 
-With some quick math, we can use any combination of integers that evaluate to 8 when multiplied together, as long as `CALLDATASIZE` is greater than 3 bytes. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
+With some quick math, we can use any combination of values that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
 
 
 # Puzzle #10
