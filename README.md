@@ -456,8 +456,7 @@ Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack i
 Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
 
 
-Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. This one is a little bit tricky, to get `CALL` to fail, there are a few ways. Some ways that it can fail are: there is not enough gas, there are not enough values on the stack or if the `CALL` expects a specific return size and gets a different one. In our case, we can't change the values on the stack or the gas, so we will manipulate the third case. Since `CALL` expects a return size of `0` for this puzzle, we need to enter calldata that when executed via `CALL`, the return size is > `0`. While you can enter any bytecode that returns a value when executed, we will use a simple byte code sequence that returns `01`. Here is what that looks like in opcodes: `PUSH1 01 PUSH1 00 MSTORE PUSH1 01 PUSH1 1F RETURN`, and encoded to hexadecimal, `0x60016000526001601ff3`. There you go, `0x60016000526001601ff3` is our answer!
-
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it will fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a STATICCALL and the value in wei (stack index 2) is not 0 (since Byzantium fork). In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
 
 
 # Puzzle #9
