@@ -9,11 +9,11 @@ Next, if you are newer to the EVM, take a brief look at the [EVM opcodes](https:
 
 With all of that out of the way, let’s check out the first puzzle. To start the first puzzle, cd into the root directory of the project and enter `npx hardhat play` into the terminal.
 
+<br>
+
 # Puzzle #1
 
 Let’s take a look at the first puzzle. You are given a series of opcodes that represent a contract. The puzzle prompts you to enter a value to send, or in other words if you sent a transaction to this contract, what would the transaction value need to be for this contract to run without hitting the [REVERT instruction](https://www.evm.codes/#fd)?  Go ahead and give it a shot and then feel free to come back here if you get stuck or want an in depth look at the solution after solving the puzzle.
-
-<br>
 
 ```js
 
