@@ -552,19 +552,19 @@ We are in the home stretch, let's take a look at puzzle #9. This puzzle adds one
 
 ```
 
-We are already familiar with the first two opcodes so we can know that after the `PUSH1 03` instruction, our stack looks like this.
+We are already familiar with the first two opcodes so we can know that after the `CALLDATASIZE PUSH1 03` instructions, our stack looks like this.
 
 ```js
 [03 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-The [LT instruction](https://www.evm.codes/#10) runs a comparison on the first two stack values to see if the first stack element is less than the second stack element. If `LT` evaluates to true, `1` is pushed on the stack, otherwise `0` is pushed onto the stack. The two values used in the comparison are consumed in this process. For the sake of the example, let's say that the `CALLDATASIZE` is 4 bytes, so `LT` will push `1` as a result. 
+The [LT instruction](https://www.evm.codes/#10) runs a comparison on the first two stack values to see if the first stack element is less than the second stack element. If `LT` evaluates to true, `1` is pushed on the stack, otherwise `0` is pushed instead. The two values used in the comparison are consumed in this process. For the sake of the example, let's say that the `CALLDATASIZE` is 4 bytes, so `LT` will push `1` as a result. 
 
-Since the `LT` instruction evaluated to true, the code then jumps to the `JUMPDEST` at instruction `09`. Following the jump, `CALLVALUE` and `CALLDATASIZE` are pushed onto the stack and `MUL` multiplies them together, consuming the values in the process. `PUSH1 08` pushes `08` to the stack and then `EQ` checks if the result of `MUL` equals `08`, consuming the values in the process. `EQ` needs to push a `1` to the stack to enable `JUMPI` to get us to the end of the puzzle.
+Since `LT` evaluated to true, the code then jumps to the `JUMPDEST` at instruction `09`. Following the jump, `CALLVALUE` and `CALLDATASIZE` are pushed onto the stack and `MUL` multiplies them together, consuming the top two stack values in the process. `PUSH1 08` pushes `08` to the stack and then `EQ` checks if the result of `MUL` equals `08`, consuming the values in the process. `EQ` needs to push a `1` to the stack to enable `JUMPI` to get us to the end of the puzzle.
 
-With all this information, we now know that we need to pass in calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE` and `CALLVALUE` is `08`. 
+With all this information, we now know that we need to enter calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE * CALLVALUE` is `08`. 
 
-With some quick math, we can use any combination of values that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
+With some quick math, we can use any combination of values that evaluate to 8 when multiplied together that satisfy the conditions above. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue. One more puzzle to go!
 
 
 # Puzzle #10
