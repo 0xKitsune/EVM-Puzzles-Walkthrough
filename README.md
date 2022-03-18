@@ -511,7 +511,10 @@ Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack i
 Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
 
 
-Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it will fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a STATICCALL and the value in wei (stack index 2) is not 0 (since Byzantium fork). In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it will fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a STATICCALL and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
+
+
+In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
 
 
 # Puzzle #9
@@ -594,3 +597,22 @@ Here it is, the final puzzle. Let's jump in.
 
 ? Enter the value to send: (0) 
 ```
+
+In this puzzle, you will need to enter a callvalue as well as calldata. Let's take a look at the first few instructions. First we see `CODESIZE CALLVALUE SWAP1` which pushes the size of the code, the callvalue you passed in and then switches their position. At this point our stack looks like this.
+
+
+```js
+[1b callvalue 0 0 0 0 0 0 0 0 0 0 0 0 0]
+```
+
+Next we se the [GT instruction]() which operates exactly like `LT`, but evaluates greater than instead of less than. As a refresher, this opcode runs a comparison on the first two stack values to see if the first stack element is greater than the second stack element. If `GT` evaluates to true, `1` is pushed on the stack, otherwise `0` is pushed onto the stack. The two values used in the comparison are consumed in this process. For this puzzle, we need `GT` to push `1` on the stack so we know that our callvalue must be less than `1b` or 27 in decimal notation. This allows us to jump down to the first `JUMPDEST` at instruction `08`.
+
+Now we see `CALLDATASIZE PUSH2 0003 SWAP1` which pushes the calldata size as well as `0003` onto the stack, and swaps their positions on the stack. Now our stack looks like this.
+
+```js
+[calldata_size 3 0 0 0 0 0 0 0 0 0 0 0 0 0]
+```
+
+Next we see a new opcode, the [MOD instruction](https://www.evm.codes/#06). This instruction evaluates the modulo of the first stack element and the second stack element, pushing the remainder onto the stack. Following the `MOD` instruction we see another new opcode, the [ISZERO instruction](), which pushes `1` onto the stack if the top value on the stack is `0`. If any other number is on the top of the stack, `0` is pushed to the top instead. In our case, we need `ISZERO` to push `1` to the stack, but we will come back to this. We then see `CALLVALUE PUSH1 0A ADD`. The [ADD instruction]() simply adds the first two values on the stack and pushes the result to the top. Following this sequence, there is a `JUMPI`, meaning that `CALLVALUE PUSH1 0A ADD` needs to push the position of the `JUMPDEST` onto the stack. Feel free to give the rest of the puzzle a shot from here.
+
+With all this information, we now know a few things. First, we need to enter calldata that is 3 bytes, so that the `CALLDATASIZE PUSH2 0003 SWAP1 MOD` sequence will push `0` onto the stack. This allows `ISZERO` to push a `1` to the stack, enabling us to jump to the second `JUMPDEST`. Second, we need to enter a callvalue such that the value is less than 26 and `callvalue + 0a` equals 19 (in hexadecimal). With these factors known, we can enter `0x000001` as calldata and `15` (in decimal) as the callvalue. Just like that, we have completed the final puzzle!
