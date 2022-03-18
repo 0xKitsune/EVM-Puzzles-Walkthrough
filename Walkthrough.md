@@ -518,9 +518,6 @@ Then we execute the `CALL` instruction, which returns `0` if the sub context rev
 Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it can fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a [STATICCALL](https://www.evm.codes/#fa) and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
 
 
-In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
-
-
 # Puzzle #9
 We are in the home stretch, let's take a look at puzzle #9. This puzzle adds one more layer of complexity, requiring you to enter both a callvalue and calldata to solve the puzzle.
 
