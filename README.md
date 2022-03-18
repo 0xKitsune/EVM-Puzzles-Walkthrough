@@ -502,7 +502,7 @@ Since the `LT` instruction evaluated to true, the code then jumps to the `JUMPDE
 
 With all this information, we now know that we need to pass in calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE` and `CALLVALUE` is `08`. 
 
-With some quick math, we can use any combination of integers that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
+With some quick math, we can use any combination of values that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
 
 
 # Puzzle #10
