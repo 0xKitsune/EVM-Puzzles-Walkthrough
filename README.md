@@ -365,13 +365,13 @@ You know the drill. Give the puzzle a shot and then come back to see the full so
 ? Enter the calldata: 
 ```
 
-First things first, we can see `CALLDATASIZE` and know that we will need to pass in calldata with a specific size to solve this puzzle. We will take note of this and come back later. After the size of the calldata is pushed to the stack, there is `PUSH1 00`, and `DUP1` making our stack at this point look like this.
+First things first, we can see `CALLDATASIZE` and know that we will need to enter calldata with a specific size to solve this puzzle. Let's take note of this and come back later. After the size of the calldata is pushed to the stack, there is `PUSH1 00`, and `DUP1` making our stack at this point look like this.
 
 ```js
 [0 0 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we encounter the [CALLDATACOPY instruction](). This instruction copies the input data from the transaction and saves it into memory. This opcode expects three elements at the top of the stack which are `[destOffset offset size]`, in this order. `destOffset` is the byte offset in the memory where the result will be copied. We haven’t talked much about memory at this point and if you want to learn more you can [read about it here](). The abbreviated version is that there is temporary storage allocated during the execution of a function and the `destOffset` tells the program what slot in memory to store the data in. The `offset` dictates where to start copying the calldata from (just like `CALLDATALOAD` does in the last example) and the `size` tells the program how much of the byte sequence to store in memory. During this process, all three of the top elements on the stack are consumed.
+Next we encounter the [CALLDATACOPY instruction](https://www.evm.codes/#37). This instruction copies the input data from the transaction and saves it into memory. This opcode expects three elements at the top of the stack which are `[destOffset offset size]`, in this order. `destOffset` is the byte offset in the memory where the result will be copied. We haven’t talked much about memory at this point and if you want to learn more you can [read about it here](https://docs.soliditylang.org/en/latest/introduction-to-smart-contracts.html?highlight=memory#storage-memory-and-the-stack). The abbreviated version is that there is a temporary data structure that allocates space to hold values during the execution of a function and the `destOffset` tells the program which slot in memory to store the data that is copied from calldata. The `offset` dictates where to start copying the calldata from (just like `CALLDATALOAD` does in the last example) and the `size` tells the program how much of the byte sequence to store in memory. During this process, all three of the top elements on the stack are consumed.
 
 With all of this known, let’s revisit our current stack.
 
@@ -386,28 +386,25 @@ When the `CALLDATALOAD` instruction executes, it will store calldata in memory s
 [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Immediately after, `CALLDATASIZE` `PUSH1 00` `PUSH1 00` are all executed, making the stack look like we had it before.
+Immediately after, `CALLDATASIZE` `PUSH1 00` `PUSH1 00` are all executed, making the stack look just like we had it before `CALLDATALOAD`.
 
 ```js
 [0 0 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we are introduced to another new opcode, the [CREATE instruction](). This instruction creates a new account (ie. Contract or EOA). This instruction expects the following three values on the top of the stack `[value offset size]` in this order. `value` is the amount of wei to send to the new account. `offset` is the slot in memory that holds the data we want to send the new account. `size` is the size of the data, which lets us know how much data to read from memory. When the `CREATE` instruction executes, all three values are consumed and the address that the account was deployed to is pushed to the top of the stack. After this opcode executes, our stack looks like this. 
+Next we are introduced to another new opcode, the [CREATE instruction](https://www.evm.codes/#f0). This instruction creates a new account (ie. Contract or EOA). This instruction expects the following three values on the top of the stack `[value offset size]` in this order. `value` is the amount of wei to send to the new account. `offset` is the slot in memory that holds the data we want to send the new account. `size` is the size of the data, which lets us know how much data to read from memory. When the `CREATE` instruction executes, all three values are consumed and the address that the account was deployed to is pushed to the top of the stack. After this opcode executes, our stack looks like this. 
 
 ```js
 [address_deployed 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next, we come across the [EXTCODESIZE instruction]() which expects an address on the top of the stack and pushes the size of the code at that address in return. The address at the top of the stack is consumed in this process. Since the size of the code at the address is the same as the `calldata_size` from before, we can note that this number will be back on the top of the stack. See if you can figure out the rest of the puzzle from here.
-
-
-Now that we understand all of the previous information, we `PUSH1 01` making our stack look like this.
+Next, we come across the [EXTCODESIZE instruction](https://www.evm.codes/#3b) which expects an address on the top of the stack and returns the size of the code at that address. The address at the top of the stack is consumed in this process. After `EXTCODESIZE` we see `PUSH1 01` making our stack look like this.
 
 ```js
 [01 address_code_size 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Directly after, the `EQ` instruction is executed, checking if the top two values are equal and pushing the result on the stack. From there `PUSH1 13` and `JUMPI` are used to get us to the `JUMPDEST`! So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! To understand this, we can look at the playground example from the [EXTCODESIZE instruction](https://www.evm.codes/#3b). Here is what the example looks like.
+Directly after, the `EQ` instruction is executed, checking if the top two values are equal, pushing the result on the stack. From there `PUSH1 13` and `JUMPI` are used to get us to the `JUMPDEST`! So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! This is a little tricky so to understand this, we can look at the playground example from the [EXTCODESIZE instruction](https://www.evm.codes/#3b). Here is what the example looks like.
 
 ```js
 // Creates a constructor that creates a contract with 32 FF as code
@@ -429,9 +426,29 @@ CREATE // Puts the new contract address on the stack
 EXTCODESIZE
 ```
 
-When this code is run, it returns a value of `ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` which is 32 bytes. If you want, you can check out the opcodes for the [deployed contract code here](https://www.evm.codes/playground?callValue=0&unit=Wei&callData=0x60016000526001601f&codeType=Bytecode&code=%2736600080373660006000F0600080808080945AF1600014601B57FD5B00%27_). If we change the return size to 16 bytes instead of 32 bytes, the `EXTCODESIZE` will be `10` which is 16 bytes in hexadecimal.
+Lets take a closer look at the opcodes in the constructor.
 
-Lets finish the puzzle. Now we know that the `EXTCODESIZE` relies on the size of the return value when the contract is called. With this information, we can pass in calldata such that when it is deployed, it returns a 1 byte value! You can use any sequence of opcodes that returns 1 byte, but for this walkthrough, we will use `0x60016000526001601ff3`. And with that, another puzzle solved!
+```js
+
+// Push a 32 byte value onto the stack
+PUSH32	FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+PUSH1	00
+
+// Store the 32 byte value at memory slot 0
+MSTORE	
+
+// Return a 32 byte value starting at memory slot 0
+PUSH1	20
+PUSH1	00
+RETURN	
+STOP
+STOP
+...
+```
+
+When this code is run, it returns a value of `ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` which is 32 bytes. If we change the return size to 16 bytes instead of 32 bytes, the `EXTCODESIZE` will be `10` which is 16 bytes in hexadecimal. This indicates that `EXTCODESIZE` uses the size of the return value to dictate the code size. 
+
+Lets finish the puzzle. Now we know that the `EXTCODESIZE` evaluates the size of the return value from the deployed bytecode. With this information, we can pass in calldata such that when it is deployed, it returns a 1 byte value! You can use any sequence of opcodes that returns 1 byte, but for this walkthrough, we will use `0x60016000526001601ff3`. And with that, another puzzle solved!
 
 
 # Puzzle #8
