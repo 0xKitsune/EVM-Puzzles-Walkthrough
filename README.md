@@ -1,7 +1,7 @@
 # EVM-Puzzles-Walkthrough
 
 
-[EVM-Puzzles](https://github.com/fvictorio/evm-puzzles) is a collection of challenges involving that will help you to better understand the Ethereum Virtual Machine.  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value or calldata that will allow the sequence to run without reverting. This walkthrough aims to be a low impact guide for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, take a look at [how stack machines work]() before starting. There are 10 puzzles. For someone with no experience with the EVM, this should take about 1-2 hours. For someone with basic EVM experience, this should take about 1 hour. If you are very comfortable with the EVM but you still want to go through the walkthrough, this should take somewhere around 30 minutes. With that note, we are ready to get started!
+[EVM-Puzzles](https://github.com/fvictorio/evm-puzzles) is a collection of challenges involving that will help you to better understand the Ethereum Virtual Machine.  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value or calldata that will allow the sequence to run without reverting. This walkthrough aims to be a low impact guide for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, take a look at [how stack machines work]() before starting. Its helpful to know that each element on the stack in the EVM is 32 byes (ie. one word). In this repo, there are 10 puzzles. For someone with no experience with the EVM, this should take about 1-2 hours. For someone with basic EVM experience, this should take about 1 hour. If you are very comfortable with the EVM but you still want to go through the walkthrough, this should take somewhere around 30 minutes. With that note, we are ready to get started!
 
 First, head over to the [EVM-Puzzles repo](https://github.com/fvictorio/evm-puzzles), clone the project and set up your local environment. Make sure you have hardhat installed. If you don’t, you can simply enter `npm install --save-dev hardhat` when you are in the root project folder.
 
@@ -154,12 +154,11 @@ Since we know the `SUB` instruction is next, we need to enter a value such that 
 
 # Puzzle #3
 
-Get ready to switch gears a little. Instead of entering a transaction value to solve the puzzle, we are going to have to enter calldata. Calldata is a read-only byte-addressable space where the transaction data during a message or call is held. In plain english, this is byte code payload that is attached to a message ([click here to learn more about the anatomy of a transaction in Ethereum]()).
+Get ready to switch gears a little. Instead of entering a transaction value to solve the puzzle, we are going to have to enter calldata. Calldata is a read-only byte-addressable space where the transaction data during a message or call is held. In plain english, this is byte code payload that is attached to a message ([click here to learn more about the anatomy of a transaction in Ethereum](https://ethereum.org/en/developers/docs/transactions/)).
 
 Let’s take a look at the puzzle.
 
 ```js
-
 ############
 # Puzzle 3 #
 ############
@@ -174,9 +173,9 @@ Let’s take a look at the puzzle.
 ? Enter the calldata: 
 ```
 
-For this puzzle, its helpful to know that 1 byte is 8 bits and that numbers 0-255 can represent one byte in the EVM. This puzzle also introduces us to a new opcode called[CALLDATASIZE](). This instruction gets the size of the calldata in bytes and pushes it onto the stack.
+For this puzzle, its helpful to know that 1 byte is 8 bits and that numbers 0-255 can represent one byte in the EVM. This puzzle also introduces us to a new opcode called[CALLDATASIZE](https://www.evm.codes/#36). This instruction gets the size of the calldata in bytes and pushes it onto the stack.
 
-With that knowledge, this makes this puzzle pretty straightforward. We will need to pass in a hex number as the calldata such that the `CALLDATASIZE` instruction pushes 4 on the stack. From there, the `JUMP` instruction will jump to the fourth instruction in the sequence, reaching the `JUMPDEST`. To keep it simple, 0xff is usually used to represent 1 byte since ff in hexadecimal evaluates to 255 in decimal format. All we need to do is copy ff four times, making the byte code we should enter: 0xffffffff. Another puzzle down!
+With that knowledge, this makes the puzzle pretty straightforward. We will need to pass in calldata such that the `CALLDATASIZE` instruction pushes 4 on the stack. From there, the `JUMP` instruction will jump to the fourth instruction in the sequence, reaching the `JUMPDEST`. To keep it simple, `0xff` can be used to represent 1 byte since `ff` in hexadecimal evaluates to 255 in decimal format. All we need to do is copy `ff` four times, making the byte code we should enter: `0xffffffff`. Another puzzle down!
 
 # Puzzle #4
 
@@ -205,7 +204,7 @@ Enter bitwise. In this puzzle we see our first `XOR` instruction. As usual, feel
 
 ```
 
-We know that `CALLVALUE` will push the value we enter onto the top of the stack and we can take a look at how many instructions there are to know how big the `CODESIZE` is. In this program, we have 12 instructions, which makes 12 bytes or `c` in hexadecmial, which gets pushed to the stack.  So now our stack looks like this.
+We know that `CALLVALUE` will push the value we enter onto the top of the stack. Also we can know how big the `CODESIZE` is by taking a look at how many instructions there are. In this program, we have 12 instructions, which makes 12 bytes or `0c` in hexadecmial, which gets pushed to the stack. So now our stack looks like this.
 
 
 ```js
@@ -214,15 +213,14 @@ We know that `CALLVALUE` will push the value we enter onto the top of the stack 
 
 ```
 
-Let’s take a look at the [XOR instruction](). This instruction evaluates two numbers in their binary representation and returns a `1` in each bit position where the bits of **either, but not both** operands are `1`s. Let’s take a look at quick example. Say that we have two numbers on the top of the stack.
+Let’s take a look at the [XOR instruction](https://www.evm.codes/#18). This instruction evaluates two numbers in their binary representation and returns a `1` in each bit position where the bits of **either, but not both** operands are `1`s. Let’s take a look at quick example. Say that we have two numbers on the top of the stack.
 
 
 ```js
 [5 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
 ```
 
-When executing the `XOR` instruction, we can imagine the two numbers on top of each other in binary representation like this.
+When executing the `XOR` instruction, we can imagine the two numbers in binary representation like this.
 
 ```js
 00000000000000000000000000000101
@@ -235,9 +233,9 @@ Then, bit by bit, the two numbers are evaluated against each other. If one bit i
 00000000000000000000000000000110
 ```
 
-Back to the puzzle. So we know that we have `c` at the top of the stack and `your_input` at the second position. The `JUMP` instruction that comes after the `XOR` needs to send us to the 10th instruction. So now with all that information, we just need to enter a callvalue so that `c XOR callvalue` results in hexidecimal `10`. Go ahead and give it a shot on your own.
+Back to the puzzle. We know that we have `0c` at the top of the stack and `your_input` in the second stack position. After the `XOR`, the `JUMP` opcode needs to send us to the 10th instruction. Now with all this information known, we just need to enter a callvalue so that `0c XOR callvalue` results in hexadecimal `10`. Go ahead and give it a shot on your own.
 
-Ok, now for the final steps. We know that we need the result of `XOR` to be `10`, which in binary is represented as `1010`. We also have `c` on the stack, which in binary is represented as `1100`. So now we need to find a number such that `c XOR your_input` results in `1010`, making the number we need to enter `0110`. This evaluates to the hex number `06`. 6 is our answer!
+Ok, now for the final steps. We know that we need the result of `XOR` to be `10`, which in binary is represented as `1010`. We also have `0c` on the stack, which in binary is represented as `1100`. So now we need to find a number such that `c XOR your_input` results in `1010`, making the number we need to enter `0110`. This evaluates to the hex number `06`. 6 is our answer!
 
 
 # Puzzle #5
@@ -266,21 +264,21 @@ Welcome to the next puzzle, where we are met with a few new opcodes. Feel free t
 ? Enter the value to send: (0) 
 ```
 
-`DUP1` meet reader, reader meet `DUP1`. The [DUP1 instruction]() is pretty straight forward. It duplicates the value at the 1st position on the stack and pushes the duplicate to the top of the stack. Similarly, DUP2 would duplicate the value at the second position on the stack and push the duplicate value to the top. There are DUP instructions for all positions in the stack (`DUP1-DUP16`).
+`DUP1` meet reader, reader meet `DUP1`. The [DUP1 instruction](https://www.evm.codes/#80) is pretty straight forward. It duplicates the value at the 1st position on the stack and pushes the duplicate to the top of the stack. Similarly, `DUP2` would duplicate the value at the second position on the stack and push the duplicate value to the top. There are DUP instructions for all positions in the stack (`DUP1-DUP16`).
 
-Taking a look at the first two instructions of the puzzle, first `CALLVALUE` is executed, pushing the value we enter as the transaction value to the top of the stack. Then `DUP1` is executed, duplicating the value we entered and pushing it to the top of the stack. So now after the first two instructions, our stack looks like this.
+Taking a look at the first two instructions of the puzzle, first `CALLVALUE` is executed, pushing the value we enter to the top of the stack. Then `DUP1` is executed, duplicating the value we entered and pushing it to the top of the stack. So now after the first two instructions, our stack looks like this.
 
 ```js
 [your_input your_input 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Then we are met with another new instruction. The [MUL instruction]() takes the first two values on the stack, multiplies them together and pushes the result onto the top of the stack. So in this instance, `your_input` is multiplied by `your_input` and the resulting stack looks like this.
+Then we are met with another new instruction. The [MUL instruction](https://www.evm.codes/#02) takes the first two values on the stack, multiplies them together and pushes the result onto the top of the stack. So in this instance, `your_input` is multiplied by `your_input` and the resulting stack looks like this.
 
 ```js
 [mul_result 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we encounter the [PUSH2 instruction](). This instruction pushes a 2 byte value onto the top of the stack. When you see this instruction, it will always be accompanied by the value that it will push. For example, in our puzzle it is seen as `PUSH2 0100` meaning that it will push the hex number `0100` onto the top of the stack. There are push instructions from `PUSH1` to `PUSH32`.
+Next we encounter the [PUSH2 instruction](https://www.evm.codes/#61). This instruction pushes a 2 byte value onto the top of the stack. When you see any `PUSH` instruction, it will always be accompanied by the value that it will push. For example, in our puzzle we have `PUSH2 0100` meaning that it will push the 2 byte hex number `0100` onto the top of the stack. There are push instructions from `PUSH1` to `PUSH32`.
 
 Coming back to our puzzle, since the next instruction is `PUSH2 0100`, our resulting stack will now look like this.
 
@@ -288,7 +286,7 @@ Coming back to our puzzle, since the next instruction is `PUSH2 0100`, our resul
 [0100 mul_result 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Now we encounter the [EQ instruction](). This instruction takes the first two values on the stack, runs an equality comparison and pushes the result on the top of the stack. If the first two values are equal, `1` is pushed to the top and if they are not equal, `0` is pushed to the top instead. Both values at positions 1 and 2 on the stack are consumed as the `EQ` instruction is evaluated.
+Now we encounter the [EQ instruction](https://www.evm.codes/#14). This instruction takes the first two values on the stack, runs an equality comparison and pushes the result on the top of the stack. If the first two values are equal, `1` is pushed to the top, otherwise `0` is pushed to the stack instead. Both values at positions 1 and 2 on the stack are consumed from the `EQ` instruction.
 
 For simplicity sake, let’s say that the `mul_result` is `0100` so when the `EQ` instruction is evaluated, `1` is pushed to the stack, making our stack now look like this.
 
@@ -296,13 +294,13 @@ For simplicity sake, let’s say that the `mul_result` is `0100` so when the `EQ
 [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-The next instruction that is evaluated is `PUSH1 0C` which pushes `c` to the top of the stack. Following this instruction, we see yet another new instruction. The [JUMPI instruction]() will conditionally alter the program counter. This instruction looks at the the second stack element to know if it should jump or not depending on if it is a `1` or a `0`. Then the first stack element is used to know what position to jump to. The JUMPI instruction consumes both values during this process. So taking a look at our puzzle, after the `PUSH1 0c` instruction, our stack looks like this.
+The next instruction that is evaluated is `PUSH1 0C` which pushes `0c` to the top of the stack. Following this instruction, we see yet another new instruction. The [JUMPI instruction](https://www.evm.codes/#57) will conditionally alter the program counter. This instruction looks at the the second stack element to know if it should jump or not, depending on if the second stack element is a `1` or a `0`. Then the first stack element is used to know what position to jump to. The `JUMPI` instruction consumes both values at the top of the stack during this process. So taking a look at our puzzle, after the `PUSH1 0c` instruction, our stack looks like this.
 
 ```js
 [0c 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-First, the `JUMPI` instruction checks the second stack element and in this case it is 1 indicating that the program should jump. Then `JUMPI` checks the first stack element to know where it should jump to. In this case, the top stack value is `0c` meaning that it will jump to the 12th instruction, which is our `JUMPDEST`. 
+First, the `JUMPI` instruction checks the second stack element. In this case it is `1` indicating that the program should jump. Then `JUMPI` checks the first stack element to know where it should jump to.  The top stack value is `0c` meaning that it will jump to the 12th instruction, which is our `JUMPDEST`. 
 
 And that will complete our puzzle! So with all this information we now know that we need to enter a callvalue so that when it gets duplicated once (making the first two elements on the stack the callvalue), and after the top stack values are multiplied, our result is the hex number `0100`. Feel free to give it a shot from here and see if you can figure it out.
 
@@ -310,7 +308,7 @@ Ok now for the final steps. We can convert `0100` into a decimal number and get 
 
 # Puzzle #6
 
-5 puzzles down, 5 to go! As usual, give the puzzle a go, then feel free to come back here for the solution and explanation. 
+5 puzzles down, 5 to go! As usual, give the puzzle a try, then feel free to come back here for the solution and explanation. 
 
 ```js
 ############
