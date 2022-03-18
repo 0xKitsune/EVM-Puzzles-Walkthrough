@@ -389,7 +389,29 @@ Now that we understand all of the previous information, we `PUSH1 01` making our
 
 Directly after, the `EQ` instruction is executed, checking if the top two values are equal and pushing the result on the stack. From there `PUSH1 13` and `JUMPI` are used to get us to the `JUMPDEST`!
 
-So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! 
+So coming all the way back to the beginning of the puzzle, we will need to enter calldata such that the code size is equal to 01 byte! To understand this, we can look at the playground example from the [EXTCODESIZE instruction](https://www.evm.codes/#3b). Here is what the example looks like.
+
+```js
+// Creates a constructor that creates a contract with 32 FF as code
+PUSH32 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+PUSH1 0
+MSTORE
+//Opcodes to return 32 ff
+PUSH32 0xFF60005260206000F30000000000000000000000000000000000000000000000
+PUSH1 32
+MSTORE
+
+// Create the contract with the constructor code above
+PUSH1 41
+PUSH1 0
+PUSH1 0
+CREATE // Puts the new contract address on the stack
+
+// The address is on the stack, we can query the size
+EXTCODESIZE
+```
+
+When this code is run, it returns a value of `ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff` which is 32 bytes. If you want, you can check out the opcodes for the [deployed contract code here](https://www.evm.codes/playground?callValue=0&unit=Wei&callData=0x60016000526001601f&codeType=Bytecode&code=%2736600080373660006000F0600080808080945AF1600014601B57FD5B00%27_). If we change the return size to 16 bytes instead of 32 bytes, the `EXTCODESIZE` will be `10` which is 16 bytes in hexadecimal.
 
 
 # Puzzle #8
@@ -503,7 +525,7 @@ Since the `LT` instruction evaluated to true, the code then jumps to the `JUMPDE
 
 With all this information, we now know that we need to pass in calldata such that the `CALLDATASIZE` is greater than 3 bytes, and the product of `CALLDATASIZE` and `CALLVALUE` is `08`. 
 
-With some quick math, we can use any combination of integers that evaluate to 8 when multiplied together. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
+With some quick math, we can use any combination of integers that evaluate to 8 when multiplied together, as long as `CALLDATASIZE` is greater than 3 bytes. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue.
 
 
 # Puzzle #10
