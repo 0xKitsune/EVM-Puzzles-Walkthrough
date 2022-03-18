@@ -487,7 +487,7 @@ Welcome to the eigth puzzle. Lets take a look at what is in store.
 ? Enter the calldata:
 ```
 
-This one might look more daunting but it is actually pretty simple. First we see a very similar `CALLDATASIZE PUSH1 00 DUP1 CALLDATACOPY CALLDATASIZE PUSH1 00 PUSH1 00 CREATE` which, just like the previous puzzle, creates a new contract from the calldata that you pass in. So right from the start, we know that we will have to enter bytecode for a contract to solve the puzzle. Lets take a quick mental note of what the stack looks like at this point. Since the `CREATE` instruction consumes the top three stack values and pushes the address that the new account was deployed to, our stack now looks like this.
+This one might look more daunting but it is actually pretty simple. First we see a very similar `CALLDATASIZE PUSH1 00 DUP1 CALLDATACOPY CALLDATASIZE PUSH1 00 PUSH1 00 CREATE` which, just like the previous puzzle, creates a new contract from the calldata that you pass in and returns the deployment address. So right from the start, we know that we will have to enter calldata with bytecode for a contract to solve the puzzle. Lets take a quick mental note of what the stack looks like at this point. Since the `CREATE` instruction consumes the top three stack values and pushes the address that the account was deployed to, our stack now looks like this.
 
 
 ```js
@@ -495,8 +495,8 @@ This one might look more daunting but it is actually pretty simple. First we see
 ```
 
 
-The next 5 instructions all relate to the [CALL instruction](https://www.evm.codes/#f1). This instruction creates a new sub context and execute the code of the given account, then resumes the current one. Note that an account with no code will return success as true. In plain english, the `CALL` instruction is used to interact with another contract. This opcode expects the stack to have a few values a the top of the stack
-`[gas address value argsOffset argsSize retOffset retSize]`, in this order. Lets walk through each of the arguments one by one. `gas` is the amount of gas that will be sent with the message call. `address` is the address that the message will be sent to. `value` is the amount of wei that will be sent with the message. `argsOffset` is the location in memory within the current context (ie. the msg.sender) that will be used as calldata for the message call. `argsSize` is the size of the calldata to send with the message call. `retOffset` is the location in memory within the current context where the return value from the call will be stored. Finally, `retSize` is the size of the return value that will be stored in memory.
+The next 5 instructions all relate to the [CALL instruction](https://www.evm.codes/#f1). This instruction creates a new sub context and execute the code of the given account, then resumes the current one. In plain english, the `CALL` instruction is used to interact with another contract. This opcode expects the stack to have a few values a the top of the stack
+`[gas address value argsOffset argsSize retOffset retSize]`, in this order. Lets walk through each of the arguments one by one. `gas` is the amount of gas that will be sent with the message call. `address` is the address that the message will be sent to. `value` is the amount of wei that will be sent with the message. `argsOffset` is the location in memory within the current context (ie. the msg.sender) that will be used as calldata for the message call. `argsSize` is the size of the calldata to send with the message call. `retOffset` is the location in memory within the current context where the return value from the call will be stored. Finally, `retSize` is the size of the return value that will be stored in memory. 
 
 Now let's take a look at the puzzle again. The next four opcodes are `PUSH1 00 DUP1 DUP1 DUP1 DUP1`, which makes the stack look like this.
 
@@ -505,7 +505,7 @@ Now let's take a look at the puzzle again. The next four opcodes are `PUSH1 00 D
 [0 0 0 0 0 address_deployed 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack items. There are SWAP instructions for all positions in the stack (`SWAP1`-`SWAP16`). In this case, we `SWAP5` exchanges `0` with `address_deployed` making our stack now in the correct order to match `[gas address value argsOffset argsSize retOffset retSize]`. Here is what our stack looks like now. 
+Then we see the [SWAP5 instruction](https://www.evm.codes/#94). This instruction swap the 1st and 6th stack items. There are `SWAP` instructions for all positions in the stack (`SWAP1`-`SWAP16`). In this case, `SWAP5` exchanges `0` with `address_deployed` making our stack now in the correct order to match `[gas address value argsOffset argsSize retOffset retSize]`. Here is what our stack looks like now. 
 
 
 ```js
@@ -515,7 +515,7 @@ Then we see the [SWAP5 instruction](). This instruction swap 1st and 6th stack i
 Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
 
 
-Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it will fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a STATICCALL and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it can fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a [STATICCALL](https://www.evm.codes/#fa) and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
 
 
 In this instance TODO: explain what to do and why. `0x60016000526001601ff3` works.
