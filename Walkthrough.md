@@ -13,6 +13,8 @@ With all of that out of the way, let’s check out the first puzzle. To start th
 
 Let’s take a look at the first puzzle. You are given a series of opcodes that represent a contract. The puzzle prompts you to enter a value to send, or in other words if you sent a transaction to this contract, what would the transaction value need to be for this contract to run without hitting the [REVERT instruction](https://www.evm.codes/#fd)?  Go ahead and give it a shot and then feel free to come back here if you get stuck or want an in depth look at the solution after solving the puzzle.
 
+<br>
+
 ```js
 
 ############
@@ -100,6 +102,7 @@ Now that all of that is clear, lets get back to the puzzle. We need to enter a v
 
 To do this, we can enter a call value of 8, which causes the `CALLVALUE` instruction to push `8` onto the stack where the `JUMP` instruction then consumes that value and jumps to the 8th instruction, skipping all of the `REVERT` instructions. Nice work, one puzzle down!
 
+<br>
 
 # Puzzle #2
 
@@ -152,6 +155,8 @@ If you haven’t finished the puzzle already, go ahead and try to use the above 
 
 Since we know the `SUB` instruction is next, we need to enter a value such that `0a - your_input` equals `6`, which makes our answer 4.
 
+<br>
+
 # Puzzle #3
 
 Get ready to switch gears a little. Instead of entering a transaction value to solve the puzzle, we are going to have to enter calldata. Calldata is a read-only byte-addressable space where the transaction data during a message or call is held. In plain english, this is byte code payload that is attached to a message ([click here to learn more about the anatomy of a transaction in Ethereum](https://ethereum.org/en/developers/docs/transactions/)).
@@ -176,6 +181,8 @@ Let’s take a look at the puzzle.
 For this puzzle, its helpful to know that 1 byte is 8 bits and that numbers 0-255 can represent one byte in the EVM. This puzzle also introduces us to a new opcode called[CALLDATASIZE](https://www.evm.codes/#36). This instruction gets the size of the calldata in bytes and pushes it onto the stack.
 
 With that knowledge, this makes the puzzle pretty straightforward. We will need to pass in calldata such that the `CALLDATASIZE` instruction pushes 4 on the stack. From there, the `JUMP` instruction will jump to the fourth instruction in the sequence, reaching the `JUMPDEST`. To keep it simple, `0xff` can be used to represent 1 byte since `ff` in hexadecimal evaluates to 255 in decimal format. All we need to do is copy `ff` four times, making the byte code we should enter: `0xffffffff`. Another puzzle down!
+
+<br>
 
 # Puzzle #4
 
@@ -237,6 +244,7 @@ Back to the puzzle. We know that we have `0c` at the top of the stack and `your_
 
 Ok, now for the final steps. We know that we need the result of `XOR` to be `10`, which in binary is represented as `1010`. We also have `0c` on the stack, which in binary is represented as `1100`. So now we need to find a number such that `c XOR your_input` results in `1010`, making the number we need to enter `0110`. This evaluates to the hex number `06`. 6 is our answer!
 
+<br>
 
 # Puzzle #5
 
@@ -306,6 +314,8 @@ And that will complete our puzzle! So with all this information we now know that
 
 Ok now for the final steps. We can convert `0100` into a decimal number and get 256. Then we can take the square root of 256 since the `DUP1 MUL` is essentially multiplying the number by itself. The resulting number is 16, which is the answer to this puzzle!
 
+<br>
+
 # Puzzle #6
 
 5 puzzles down, 5 to go! As usual, give the puzzle a try, then feel free to come back here for the solution and explanation. 
@@ -335,6 +345,8 @@ Say hello to the [CALLDATALOAD instruction](https://www.evm.codes/#35). This ins
 Now back to the puzzle. We can see that there is `PUSH1 00` followed by `CALLDATALOAD` meaning that the calldata will be loaded in starting from byte 0 and bytes 0-32 of the calldata will be pushed onto the top of the stack. We can see that the `JUMP` instruction needs to alter the program counter to `0a` (ie. the 10th instruction). Feel free to stop here and try to solve the rest of the puzzle. 
 
 Ok let’s go over the final steps. We know that calldata is in hexadecimal, so it might seem intuitive to enter `0x0a` as the calldata to complete the puzzle, but you might have noticed that this doesn’t work. This is because when calldata is sent, since the byte sequence was not 32 bytes, it is padded to the right, so what we thought was `0a`, actually turns into `a00000000000000000000000000000000000000000000000000000000000000`. So what we need to do is pad our `0x0a` with 31 bytes to the left making it `0x000000000000000000000000000000000000000000000000000000000000000a`. There you go, that is our answer!
+
+<br>
 
 # Puzzle #7
 
@@ -450,6 +462,7 @@ When this code is run, it returns a value of `ffffffffffffffffffffffffffffffffff
 
 Lets finish the puzzle. Now we know that the `EXTCODESIZE` evaluates the size of the return value from the deployed bytecode. With this information, we can pass in calldata such that when it is deployed, it returns a 1 byte value! You can use any sequence of opcodes that returns 1 byte, but for this walkthrough, we will use `0x60016000526001601ff3`. And with that, another puzzle solved!
 
+<br>
 
 # Puzzle #8
 
@@ -517,6 +530,7 @@ Then we execute the `CALL` instruction, which returns `0` if the sub context rev
 
 Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it can fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a [STATICCALL](https://www.evm.codes/#fa) and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
 
+<br>
 
 # Puzzle #9
 We are in the home stretch, let's take a look at puzzle #9. This puzzle adds one more layer of complexity, requiring you to enter both a callvalue and calldata to solve the puzzle.
@@ -563,6 +577,7 @@ With all this information, we now know that we need to enter calldata such that 
 
 With some quick math, we can use any combination of values that evaluate to 8 when multiplied together that satisfy the conditions above. For the walkthrough, we will enter `0x00000001` as the calldata and `2` as the callvalue. One more puzzle to go!
 
+<br>
 
 # Puzzle #10
 Here it is, the final puzzle. Let's jump in.
