@@ -1,9 +1,7 @@
 # EVM-Puzzles-Walkthrough
 
 
-TODO: need to explain when values are consumed during operations, also need to explain that the value you enter for tx value is in decimal and it gets converted to hexadecimal.
-
-EVM-Puzzles is a collection of challenges involving that will help you to better understand the Ethereum Virtual Machine.  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value or calldata that will allow the sequence to run without reverting. This walkthrough aims to be a low impact guide for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, take a look at [how stack machines work]() before starting. There are 10 puzzles. For someone with no experience with the EVM, this should take about 1-2 hours. For someone with basic EVM experience, this should take about 1 hour. If you are very comfortable with the EVM but you still want to go through the walkthrough, this should take somewhere around 30 minutes. With that note, we are ready to get started!
+[EVM-Puzzles](https://github.com/fvictorio/evm-puzzles) is a collection of challenges involving that will help you to better understand the Ethereum Virtual Machine.  Each puzzle starts out by giving you a series of opcodes and prompts you to input the correct transaction value or calldata that will allow the sequence to run without reverting. This walkthrough aims to be a low impact guide for each puzzle, making it easy for anyone with any experience level to fully understand the why and the how behind each solution. This walkthrough will assume that you are familiar with stack machines. If not, take a look at [how stack machines work]() before starting. There are 10 puzzles. For someone with no experience with the EVM, this should take about 1-2 hours. For someone with basic EVM experience, this should take about 1 hour. If you are very comfortable with the EVM but you still want to go through the walkthrough, this should take somewhere around 30 minutes. With that note, we are ready to get started!
 
 First, head over to the [EVM-Puzzles repo](https://github.com/fvictorio/evm-puzzles), clone the project and set up your local environment. Make sure you have hardhat installed. If you don’t, you can simply enter `npm install --save-dev hardhat` when you are in the root project folder.
 
@@ -128,37 +126,31 @@ Now that you have your feet wet, lets take a look at the second puzzle. Give it 
 
 ```
 
-Just like before, we need to enter a transaction value to send that will cause the program to run without reverting. If we take a look at the sequence of instructions, we can see that we need the `JUMP` opcode to alter the program counter to the 6th instruction. Just like before, the first instruction is call value, so we know that the value we enter will end up on the top of the stack after the first instruction.
+Just like before, we need to enter a transaction value to send that will cause the program to run without reverting. If we take a look at the sequence of instructions, we can see that we need the `JUMP` opcode to alter the program counter to the 6th instruction. Just like before, the first instruction is `CALLVALUE`, so we know that the value we enter will end up on the top of the stack after the first instruction.
 
-Lets take a look at the [CODESIZE instruction](). This opcode gets the size of the code running in the current environment. In this example, we can manually check out the size of the code by looking at how many opcodes there are in the sequence. Each opcode is 1 byte, and in this puzzle we have 10 opcodes meaning that the size of the code is 10 bytes. As an important side note, the EVM uses hex numbers to represent byte code. If you are unfamiliar, check out [how hex numbers]() work. With this in mind, we can know that `a` gets pushed to the stack, representing 10 bytes.
+Lets take a look at the [CODESIZE instruction](https://www.evm.codes/#38). This opcode gets the size of the code running in the current environment. In this example, we can manually check the size of the code by looking at how many opcodes there are in the sequence. Each opcode is 1 byte, and in this puzzle we have 10 opcodes meaning that the size of the code is 10 bytes. As an important side note, the EVM uses hex numbers to represent byte code. If you are unfamiliar, check out [how hex numbers](https://simple.wikipedia.org/wiki/Hexadecimal) work. With this in mind, we can know that `0a` gets pushed to the stack, representing 10 bytes.
 
-The next opcode we come across is the [SUB instruction](), which takes the first stack element minus the second stack element, consumes both the first and second element and pushes the result to the top of the stack. For example if we had a stack that looked like this.
+The next opcode we come across is the [SUB instruction](https://www.evm.codes/#03), which takes the first stack element minus the second stack element, pushing the result on the top of the stack. Both inputs at the top of the stack before the `SUB` instruction are consumed. For example if we had a stack that looked like this.
 
 ```js
-
 [3 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
 ```
 
 Executing the `SUB` instruction would produce the following stack result.
 
 ```js
-
 [1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
 ```
 
-With this information let's get back to the puzzle. We now know that the program first evaluates the `CALLVALUE` instruction, pushing the value of the transaction on the stack. Then the program evaluates the `CODESIZE` instruction, which pushes `a` (representing 10 bytes) onto the stack. We also know that we need `JUMP` to alter the program counter to the 6th instruction. In essence, we have the following stack after the `CODESIZE` instruction.
+With this information let's get back to the puzzle. We now know that the program first evaluates the `CALLVALUE` instruction, pushing the value we entered onto the stack. Then the program evaluates the `CODESIZE` instruction, which pushes `0a` (representing 10 bytes) onto the stack. We also know that we need `JUMP` to alter the program counter to the 6th instruction. This is what the stack looks like after the `CODESIZE` instruction.
 
 ```js
-
 [a your_input 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
 ```
 
-Go ahead and if you haven’t already finished this puzzle, try to use the above information to enter the correct value, or feel free to read on for the last step of the solution.
+If you haven’t finished the puzzle already, go ahead and try to use the above information to enter the correct value. Otherwise, feel free to read on for the last step of the solution.
 
-Since we know the `SUB` instruction is next, we need to enter a value such that `a - your_input` equals `6`, which makes our answer 4.
+Since we know the `SUB` instruction is next, we need to enter a value such that `0a - your_input` equals `6`, which makes our answer 4.
 
 # Puzzle #3
 
