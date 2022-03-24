@@ -404,7 +404,15 @@ Immediately after, `CALLDATASIZE` `PUSH1 00` `PUSH1 00` are all executed, making
 [0 0 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we are introduced to another new opcode, the [CREATE instruction](https://www.evm.codes/#f0). This instruction creates a new account (ie. Contract or EOA). This instruction expects the following three values on the top of the stack `[value offset size]` in this order. `value` is the amount of wei to send to the new account. `offset` is the slot in memory that holds the data we want to send the new account. `size` is the size of the data, which lets us know how much data to read from memory. When the `CREATE` instruction executes, all three values are consumed and the address that the account was deployed to is pushed to the top of the stack. After this opcode executes, our stack looks like this. 
+Next we are introduced to another new opcode, the [CREATE instruction](https://www.evm.codes/#f0). This instruction creates a new account (ie. Contract or EOA). 
+
+Let's get a little under the hood with the `CREATE` opcode, as this will come in handy later during the walkthrough (and is generally good to know). 
+
+When deploying a new contract with the `CREATE` opcode, the stack must have `[value offset size]` at the top of the stack, in this order. The `value` is the amount of wei to send the new contract that is being created, the `offset` is the location in memory where the bytecode starts that will run on deployment and `size` is the size of the bytecode that will run on deployment. When you deploy a contract with the `CREATE` opcode, the bytecode from the `offset` is not the new contract's bytecode, but rather the bytecode from the `offset` is executed during deployment and the **return value** becomes the newly created contract's bytecode.   
+
+Let's run through a quick example that will make this easy to understand. If you use the `CREATE` opcode with deployment bytecode of [0x6160016000526002601Ef3](https://www.evm.codes/playground?callValue=0&unit=Wei&codeType=Bytecode&code='6160016000526002601Ef3'_), since the return value of this bytecode sequence is `6001`, the newly created contract's bytecode will be `6001` ie. `PUSH1 01`. So when you call this contract, it will simply execute `PUSH1 01`! Make sure to take note of this concept as it will come in handy later.
+
+When the `CREATE` instruction executes, all three values are consumed and the address that the account was deployed to is pushed to the top of the stack. After this opcode executes, our stack looks like this. 
 
 ```js
 [address_deployed 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
@@ -528,7 +536,12 @@ Then we see the [SWAP5 instruction](https://www.evm.codes/#94). This instruction
 Then we execute the `CALL` instruction, which returns `0` if the sub context reverted and `1` if it was a success. After the `CALL` instruction we can see a `PUSH1 00 EQ` meaning that we need `CALL` to push a `0` onto the stack. Go ahead and give the rest of the puzzle a shot, then feel free to come back to see the rest of the solution.
 
 
-Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it can fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a [STATICCALL](https://www.evm.codes/#fa) and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0).
+Ok, so now we know that the `CALL` instruction needs to return `0` which means we need to enter calldata that causes `CALL` to fail. To get `CALL` to fail, there are three ways. One way it can fail is if there is not enough gas. The second way it can fail is if there are not enough values on the stack. The third way it can fail is if the current execution context is from a [STATICCALL](https://www.evm.codes/#fa) and the value in wei (stack index 2) is not 0 (since Byzantium fork). It is also important to note that `CALL` will always succeed as true when you `CALL` an account with no code (or codesize of 0). 
+
+To finish this puzzle, let's refer back to how the `CREATE` opcode works. We know that the return value of the bytecode that is run on deployment becomes the bytecode for the newly created contract. With that information known, we can pass in calldata with a bytecode sequenece such that the return value of the sequenece causes a `REVERT` when run. 
+
+You can pass in any that will result in a `REVERT` but for the walkthrough we will use [0x60016000526001601ff3](https://www.evm.codes/playground?callValue=0&unit=Wei&codeType=Bytecode&code='60016000526001601ff3'_) as the deployment bytecode. Since the return value of this bytecode sequence is `01`, the newly created contract's code will be `01` ie. the `ADD` instruction. So when you call this contract, it will execute the `ADD` instruction, and since there are no values on the stack in the subcontext of the contract, the `CALL` will fail (ie. `REVERT`)! There you go, `0x60016000526001601ff3` is our answer!
+
 
 <br>
 
