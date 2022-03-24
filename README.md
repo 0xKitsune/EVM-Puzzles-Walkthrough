@@ -404,9 +404,7 @@ Immediately after, `CALLDATASIZE` `PUSH1 00` `PUSH1 00` are all executed, making
 [0 0 calldata_size 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we are introduced to another new opcode, the [CREATE instruction](https://www.evm.codes/#f0). This instruction creates a new account (ie. Contract or EOA). 
-
-Let's get a little under the hood with the `CREATE` opcode, as this will come in handy later during the walkthrough (and is generally good to know). 
+Next we are introduced to another new opcode, the [CREATE instruction](https://www.evm.codes/#f0). This instruction creates a new account (ie. Contract or EOA). Let's get a little under the hood with the `CREATE` opcode, as this will come in handy later during the walkthrough (and is generally good to know). 
 
 When deploying a new contract with the `CREATE` opcode, the stack must have `[value offset size]` at the top of the stack, in this order. The `value` is the amount of wei to send the new contract that is being created, the `offset` is the location in memory where the bytecode starts that will run on deployment and `size` is the size of the bytecode that will run on deployment. When you deploy a contract with the `CREATE` opcode, the bytecode from the `offset` is not the new contract's bytecode, but rather the bytecode from the `offset` is executed during deployment and the **return value** becomes the newly created contract's bytecode.   
 
