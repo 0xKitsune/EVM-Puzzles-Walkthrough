@@ -632,7 +632,7 @@ In this puzzle, you will need to enter a callvalue as well as calldata. Let's ta
 [1b callvalue 0 0 0 0 0 0 0 0 0 0 0 0 0]
 ```
 
-Next we se the [GT instruction](https://www.evm.codes/#11) which operates exactly like `LT`, but evaluates greater than instead of less than. For this puzzle, we need `GT` to push `1` on the stack, so we know that our callvalue must be less than `1b` (ie. 27 in decimal notation). This will allow the program to jump down to the first `JUMPDEST` at instruction `08`.
+Next we see the [GT instruction](https://www.evm.codes/#11) which operates exactly like `LT`, but evaluates greater than instead of less than. For this puzzle, we need `GT` to push `1` on the stack, so we know that our callvalue must be less than `1b` (ie. 27 in decimal notation). This will allow the program to jump down to the first `JUMPDEST` at instruction `08`.
 
 Now we see `CALLDATASIZE PUSH2 0003 SWAP1` which pushes the calldata size as well as `0003` onto the stack, and swaps their positions. Now our stack looks like this.
 
